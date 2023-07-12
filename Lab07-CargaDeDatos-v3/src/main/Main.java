@@ -27,7 +27,7 @@ public class Main {
                 // Realizar operaciones en la base de datos...
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        new ClienteCRUDApp(conexion).setVisible(true);
+                        new ProductoCRUDApp(conexion).setVisible(true);
                     }
                 });
             } catch (SQLException e) {

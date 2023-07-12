@@ -1,6 +1,7 @@
 package main;
 
 import javax.swing.*;
+import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -8,19 +9,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
-public class ClienteCRUDApp extends JFrame {
+public class ProductoCRUDApp extends JFrame {
 	/**
 	 *
 	 */
 	private static final long serialVersionUID = 1L;
 	private JTextField textFieldCodigo;
 	private JTextField textFieldNombre;
-	private JTextField textFieldApePat;
-	private JTextField textFieldApeMat;
-	private JTextField textFieldDir;
-	private JTextField textFieldTel;
-	private JTextField textFieldCorElc;
+	private JTextField textFieldStock;
 	private JButton buttonAdicionar;
 	private JButton buttonModificar;
 	private JButton buttonEliminar;
@@ -39,10 +38,17 @@ public class ClienteCRUDApp extends JFrame {
 	private boolean hasUpdate = false;
 	private int lastOption = -1;
 	private PreparedStatement statement;
+	private JLabel lblStock;
+	private JSpinner spinnerPreVenta;
+	private JSpinner spinnerPreCompra;
+	private JComboBox<Marca> comboMarca;
+	private JComboBox<Categoria> comboCategoria;
+	private ArrayList<Marca> marcas;
+	private ArrayList<Categoria> categorias;
 
-	public ClienteCRUDApp(Connection connection) {
+	public ProductoCRUDApp(Connection connection) {
 		// Configurar la ventana principal
-		setTitle("Cliente CRUD App");
+		setTitle("Producto CRUD App");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(496, 548);
 		setLocationRelativeTo(null);
@@ -58,29 +64,13 @@ public class ClienteCRUDApp extends JFrame {
 		};
 		tableModel.addColumn("Código");
 		tableModel.addColumn("Nombre");
-		tableModel.addColumn("Apellido Paterno");
-		tableModel.addColumn("Apellido Materno");
-		tableModel.addColumn("Dirección");
-		tableModel.addColumn("Teléfono");
-		tableModel.addColumn("Correo Electrónico");
+		tableModel.addColumn("Stock");
+		tableModel.addColumn("Precio Venta");
+		tableModel.addColumn("Precio Compra");
+		tableModel.addColumn("Cod. Marca");
+		tableModel.addColumn("Num. Categoria");
 		tableModel.addColumn("Est. Reg.");
 		tableEstadoRegistro = new JTable(tableModel);
-		tableEstadoRegistro.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent evt) {
-				int row = tableEstadoRegistro.rowAtPoint(evt.getPoint());
-				if (row >= 0) {
-					textFieldCodigo.setText(tableEstadoRegistro.getModel().getValueAt(row, 0).toString());
-					textFieldNombre.setText(tableEstadoRegistro.getModel().getValueAt(row, 1).toString());
-					textFieldApePat.setText(tableEstadoRegistro.getModel().getValueAt(row, 2).toString());
-					textFieldApeMat.setText(tableEstadoRegistro.getModel().getValueAt(row, 3).toString());
-					textFieldDir.setText(tableEstadoRegistro.getModel().getValueAt(row, 4).toString());
-					textFieldTel.setText(tableEstadoRegistro.getModel().getValueAt(row, 5).toString());
-					textFieldCorElc.setText(tableEstadoRegistro.getModel().getValueAt(row, 6).toString());
-					textFieldEstReg.setText(tableEstadoRegistro.getModel().getValueAt(row, 7).toString());
-				}
-			}
-		});
 
 		JScrollPane scrollPane = new JScrollPane(tableEstadoRegistro);
 
@@ -90,9 +80,9 @@ public class ClienteCRUDApp extends JFrame {
 		JPanel inputPanel = new JPanel();
 		GridBagLayout gbl_inputPanel = new GridBagLayout();
 		gbl_inputPanel.columnWidths = new int[] { 36, 100, 100, 100, 100, 36, 0 };
-		gbl_inputPanel.rowHeights = new int[] { 18, 30, 30, 30, 30, 30, 30, 30, 30, 0 };
-		gbl_inputPanel.columnWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE };
-		gbl_inputPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		gbl_inputPanel.rowHeights = new int[] { 18, 30, 30, 30, 30, 30, 30, 30, 0 };
+		gbl_inputPanel.columnWeights = new double[] { 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE };
+		gbl_inputPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		inputPanel.setLayout(gbl_inputPanel);
 
 		verticalStrut = Box.createVerticalStrut(20);
@@ -142,88 +132,95 @@ public class ClienteCRUDApp extends JFrame {
 		gbc_textFieldNombre.gridx = 3;
 		gbc_textFieldNombre.gridy = 2;
 		inputPanel.add(textFieldNombre, gbc_textFieldNombre);
-		GridBagConstraints gbc_2 = new GridBagConstraints();
-		gbc_2.fill = GridBagConstraints.BOTH;
-		gbc_2.insets = new Insets(0, 0, 5, 5);
-		gbc_2.gridx = 1;
-		gbc_2.gridy = 3;
-		JLabel label_3 = new JLabel("Apellido Paterno:");
-		inputPanel.add(label_3, gbc_2);
-		textFieldApePat = new JTextField(20);
-		GridBagConstraints gbc_textFieldApePat = new GridBagConstraints();
-		gbc_textFieldApePat.gridwidth = 2;
-		gbc_textFieldApePat.fill = GridBagConstraints.BOTH;
-		gbc_textFieldApePat.insets = new Insets(0, 0, 5, 5);
-		gbc_textFieldApePat.gridx = 3;
-		gbc_textFieldApePat.gridy = 3;
-		inputPanel.add(textFieldApePat, gbc_textFieldApePat);
-		GridBagConstraints gbc_4 = new GridBagConstraints();
-		gbc_4.fill = GridBagConstraints.BOTH;
-		gbc_4.insets = new Insets(0, 0, 5, 5);
-		gbc_4.gridx = 1;
-		gbc_4.gridy = 4;
-		JLabel label_4 = new JLabel("Apellido Materno:");
-		inputPanel.add(label_4, gbc_4);
-		textFieldApeMat = new JTextField(20);
-		GridBagConstraints gbc_textFieldApeMat = new GridBagConstraints();
-		gbc_textFieldApeMat.gridwidth = 2;
-		gbc_textFieldApeMat.fill = GridBagConstraints.BOTH;
-		gbc_textFieldApeMat.insets = new Insets(0, 0, 5, 5);
-		gbc_textFieldApeMat.gridx = 3;
-		gbc_textFieldApeMat.gridy = 4;
-		inputPanel.add(textFieldApeMat, gbc_textFieldApeMat);
-		GridBagConstraints gbc_5 = new GridBagConstraints();
-		gbc_5.fill = GridBagConstraints.BOTH;
-		gbc_5.insets = new Insets(0, 0, 5, 5);
-		gbc_5.gridx = 1;
-		gbc_5.gridy = 5;
-		JLabel label_5 = new JLabel("Dirección:");
-		inputPanel.add(label_5, gbc_5);
-		textFieldDir = new JTextField(50);
-		GridBagConstraints gbc_textFieldDir = new GridBagConstraints();
-		gbc_textFieldDir.gridwidth = 2;
-		gbc_textFieldDir.fill = GridBagConstraints.BOTH;
-		gbc_textFieldDir.insets = new Insets(0, 0, 5, 5);
-		gbc_textFieldDir.gridx = 3;
-		gbc_textFieldDir.gridy = 5;
-		inputPanel.add(textFieldDir, gbc_textFieldDir);
-		GridBagConstraints gbc_6 = new GridBagConstraints();
-		gbc_6.fill = GridBagConstraints.BOTH;
-		gbc_6.insets = new Insets(0, 0, 5, 5);
-		gbc_6.gridx = 1;
-		gbc_6.gridy = 6;
-		JLabel label_6 = new JLabel("Teléfono:");
-		inputPanel.add(label_6, gbc_6);
-		textFieldTel = new JTextField(11);
-		GridBagConstraints gbc_textFieldTel = new GridBagConstraints();
-		gbc_textFieldTel.gridwidth = 2;
-		gbc_textFieldTel.fill = GridBagConstraints.BOTH;
-		gbc_textFieldTel.insets = new Insets(0, 0, 5, 5);
-		gbc_textFieldTel.gridx = 3;
-		gbc_textFieldTel.gridy = 6;
-		inputPanel.add(textFieldTel, gbc_textFieldTel);
-		GridBagConstraints gbc_7 = new GridBagConstraints();
-		gbc_7.fill = GridBagConstraints.BOTH;
-		gbc_7.insets = new Insets(0, 0, 5, 5);
-		gbc_7.gridx = 1;
-		gbc_7.gridy = 7;
-		JLabel label_7 = new JLabel("Correo Electrónico:");
-		inputPanel.add(label_7, gbc_7);
-		textFieldCorElc = new JTextField(20);
-		GridBagConstraints gbc_textFieldCorElc = new GridBagConstraints();
-		gbc_textFieldCorElc.gridwidth = 2;
-		gbc_textFieldCorElc.fill = GridBagConstraints.BOTH;
-		gbc_textFieldCorElc.insets = new Insets(0, 0, 5, 5);
-		gbc_textFieldCorElc.gridx = 3;
-		gbc_textFieldCorElc.gridy = 7;
-		inputPanel.add(textFieldCorElc, gbc_textFieldCorElc);
+		GridBagConstraints gbc_lblStock = new GridBagConstraints();
+		gbc_lblStock.fill = GridBagConstraints.BOTH;
+		gbc_lblStock.insets = new Insets(0, 0, 5, 5);
+		gbc_lblStock.gridx = 1;
+		gbc_lblStock.gridy = 3;
+		JLabel label_3;
+		lblStock = new JLabel("Stock:");
+		inputPanel.add(lblStock, gbc_lblStock);
+		textFieldStock = new JTextField(20);
+		GridBagConstraints gbc_textFieldStock = new GridBagConstraints();
+		gbc_textFieldStock.gridwidth = 2;
+		gbc_textFieldStock.fill = GridBagConstraints.BOTH;
+		gbc_textFieldStock.insets = new Insets(0, 0, 5, 5);
+		gbc_textFieldStock.gridx = 3;
+		gbc_textFieldStock.gridy = 3;
+		inputPanel.add(textFieldStock, gbc_textFieldStock);
+		GridBagConstraints gbc_lblPrecioVenta = new GridBagConstraints();
+		gbc_lblPrecioVenta.fill = GridBagConstraints.BOTH;
+		gbc_lblPrecioVenta.insets = new Insets(0, 0, 5, 5);
+		gbc_lblPrecioVenta.gridx = 1;
+		gbc_lblPrecioVenta.gridy = 4;
+		JLabel lblPrecioVenta = new JLabel("Precio Venta:");
+		inputPanel.add(lblPrecioVenta, gbc_lblPrecioVenta);
+		
+		spinnerPreVenta = new JSpinner();
+		spinnerPreVenta.setModel(new SpinnerNumberModel(0.10, 0.00, null, 0.01));
+		GridBagConstraints gbc_spinnerPreVenta = new GridBagConstraints();
+		gbc_spinnerPreVenta.fill = GridBagConstraints.BOTH;
+		gbc_spinnerPreVenta.insets = new Insets(0, 0, 5, 5);
+		gbc_spinnerPreVenta.gridx = 2;
+		gbc_spinnerPreVenta.gridy = 4;
+		inputPanel.add(spinnerPreVenta, gbc_spinnerPreVenta);
+		GridBagConstraints gbc_lblPrecioCompra = new GridBagConstraints();
+		gbc_lblPrecioCompra.fill = GridBagConstraints.BOTH;
+		gbc_lblPrecioCompra.insets = new Insets(0, 0, 5, 5);
+		gbc_lblPrecioCompra.gridx = 3;
+		gbc_lblPrecioCompra.gridy = 4;
+		JLabel lblPrecioCompra = new JLabel("Precio Compra:");
+		inputPanel.add(lblPrecioCompra, gbc_lblPrecioCompra);
+		
+		spinnerPreCompra = new JSpinner();
+		spinnerPreCompra.setModel(new SpinnerNumberModel(0.10, 0.00, null, 0.01));
+		GridBagConstraints gbc_spinnerPreCompra = new GridBagConstraints();
+		gbc_spinnerPreCompra.fill = GridBagConstraints.BOTH;
+		gbc_spinnerPreCompra.insets = new Insets(0, 0, 5, 5);
+		gbc_spinnerPreCompra.gridx = 4;
+		gbc_spinnerPreCompra.gridy = 4;
+		inputPanel.add(spinnerPreCompra, gbc_spinnerPreCompra);
+		GridBagConstraints gbc_lblTelfono = new GridBagConstraints();
+		gbc_lblTelfono.anchor = GridBagConstraints.EAST;
+		gbc_lblTelfono.fill = GridBagConstraints.VERTICAL;
+		gbc_lblTelfono.insets = new Insets(0, 0, 5, 5);
+		gbc_lblTelfono.gridx = 1;
+		gbc_lblTelfono.gridy = 5;
+		JLabel lblTelfono = new JLabel("Marca :");
+		inputPanel.add(lblTelfono, gbc_lblTelfono);
+		
+		comboMarca = new JComboBox<Marca>();
+		GridBagConstraints gbc_comboMarca = new GridBagConstraints();
+		gbc_comboMarca.gridwidth = 2;
+		gbc_comboMarca.insets = new Insets(0, 0, 5, 5);
+		gbc_comboMarca.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboMarca.gridx = 3;
+		gbc_comboMarca.gridy = 5;
+		inputPanel.add(comboMarca, gbc_comboMarca);
+		GridBagConstraints gbc_lblCategoria = new GridBagConstraints();
+		gbc_lblCategoria.anchor = GridBagConstraints.EAST;
+		gbc_lblCategoria.fill = GridBagConstraints.VERTICAL;
+		gbc_lblCategoria.insets = new Insets(0, 0, 5, 5);
+		gbc_lblCategoria.gridx = 1;
+		gbc_lblCategoria.gridy = 6;
+		JLabel lblCategoria = new JLabel("Categoria:");
+		inputPanel.add(lblCategoria, gbc_lblCategoria);
+		
+		comboCategoria = new JComboBox<Categoria>();
+		GridBagConstraints gbc_comboCategoria = new GridBagConstraints();
+		gbc_comboCategoria.gridwidth = 2;
+		gbc_comboCategoria.insets = new Insets(0, 0, 5, 5);
+		gbc_comboCategoria.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboCategoria.gridx = 3;
+		gbc_comboCategoria.gridy = 6;
+		inputPanel.add(comboCategoria, gbc_comboCategoria);
 
 		label_3 = new JLabel("Estado de Registro:");
 		GridBagConstraints gbc_label_3 = new GridBagConstraints();
 		gbc_label_3.fill = GridBagConstraints.BOTH;
 		gbc_label_3.insets = new Insets(0, 0, 5, 5);
 		gbc_label_3.gridx = 1;
-		gbc_label_3.gridy = 8;
+		gbc_label_3.gridy = 7;
 		inputPanel.add(label_3, gbc_label_3);
 
 		textFieldEstReg = new JTextField(20);
@@ -232,7 +229,7 @@ public class ClienteCRUDApp extends JFrame {
 		gbc_textFieldEstReg.gridwidth = 2;
 		gbc_textFieldEstReg.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldEstReg.gridx = 3;
-		gbc_textFieldEstReg.gridy = 8;
+		gbc_textFieldEstReg.gridy = 7;
 		inputPanel.add(textFieldEstReg, gbc_textFieldEstReg);
 
 		buttonAdicionar = new JButton("Adicionar");
@@ -240,7 +237,7 @@ public class ClienteCRUDApp extends JFrame {
 		gbc_buttonAdicionar.fill = GridBagConstraints.BOTH;
 		gbc_buttonAdicionar.insets = new Insets(0, 0, 5, 5);
 		gbc_buttonAdicionar.gridx = 1;
-		gbc_buttonAdicionar.gridy = 9;
+		gbc_buttonAdicionar.gridy = 8;
 		inputPanel.add(buttonAdicionar, gbc_buttonAdicionar);
 
 		buttonModificar = new JButton("Modificar");
@@ -248,7 +245,7 @@ public class ClienteCRUDApp extends JFrame {
 		gbc_buttonModificar.fill = GridBagConstraints.BOTH;
 		gbc_buttonModificar.insets = new Insets(0, 0, 5, 5);
 		gbc_buttonModificar.gridx = 2;
-		gbc_buttonModificar.gridy = 9;
+		gbc_buttonModificar.gridy = 8;
 		inputPanel.add(buttonModificar, gbc_buttonModificar);
 
 		buttonEliminar = new JButton("Eliminar");
@@ -256,7 +253,7 @@ public class ClienteCRUDApp extends JFrame {
 		gbc_buttonEliminar.fill = GridBagConstraints.BOTH;
 		gbc_buttonEliminar.insets = new Insets(0, 0, 5, 5);
 		gbc_buttonEliminar.gridx = 3;
-		gbc_buttonEliminar.gridy = 9;
+		gbc_buttonEliminar.gridy = 8;
 		inputPanel.add(buttonEliminar, gbc_buttonEliminar);
 
 		buttonCancelar = new JButton("Cancelar");
@@ -264,44 +261,60 @@ public class ClienteCRUDApp extends JFrame {
 		gbc_buttonCancelar.fill = GridBagConstraints.BOTH;
 		gbc_buttonCancelar.insets = new Insets(0, 0, 5, 5);
 		gbc_buttonCancelar.gridx = 4;
-		gbc_buttonCancelar.gridy = 9;
+		gbc_buttonCancelar.gridy = 8;
 		inputPanel.add(buttonCancelar, gbc_buttonCancelar);
 
 		buttonInactivar = new JButton("Inactivar");
 		GridBagConstraints gbc_buttonInactivar = new GridBagConstraints();
 		gbc_buttonInactivar.fill = GridBagConstraints.BOTH;
-		gbc_buttonInactivar.insets = new Insets(0, 0, 5, 5);
+		gbc_buttonInactivar.insets = new Insets(0, 0, 0, 5);
 		gbc_buttonInactivar.gridx = 1;
-		gbc_buttonInactivar.gridy = 10;
+		gbc_buttonInactivar.gridy = 9;
 		inputPanel.add(buttonInactivar, gbc_buttonInactivar);
 
 		buttonReactivar = new JButton("Reactivar");
 		GridBagConstraints gbc_buttonReactivar = new GridBagConstraints();
-		gbc_buttonReactivar.insets = new Insets(0, 0, 5, 5);
+		gbc_buttonReactivar.insets = new Insets(0, 0, 0, 5);
 		gbc_buttonReactivar.fill = GridBagConstraints.BOTH;
 		gbc_buttonReactivar.gridx = 2;
-		gbc_buttonReactivar.gridy = 10;
+		gbc_buttonReactivar.gridy = 9;
 		inputPanel.add(buttonReactivar, gbc_buttonReactivar);
 
 		buttonActualizar = new JButton("Actualizar");
 		GridBagConstraints gbc_buttonActualizar = new GridBagConstraints();
 		gbc_buttonActualizar.fill = GridBagConstraints.BOTH;
-		gbc_buttonActualizar.insets = new Insets(0, 0, 5, 5);
+		gbc_buttonActualizar.insets = new Insets(0, 0, 0, 5);
 		gbc_buttonActualizar.gridx = 3;
-		gbc_buttonActualizar.gridy = 10;
+		gbc_buttonActualizar.gridy = 9;
 		inputPanel.add(buttonActualizar, gbc_buttonActualizar);
 
 		buttonSalir = new JButton("Salir");
 		GridBagConstraints gbc_buttonSalir = new GridBagConstraints();
 		gbc_buttonSalir.fill = GridBagConstraints.BOTH;
-		gbc_buttonSalir.insets = new Insets(0, 0, 5, 5);
+		gbc_buttonSalir.insets = new Insets(0, 0, 0, 5);
 		gbc_buttonSalir.gridx = 4;
-		gbc_buttonSalir.gridy = 10;
+		gbc_buttonSalir.gridy = 9;
 		inputPanel.add(buttonSalir, gbc_buttonSalir);
 
 		panel.add(scrollPane, BorderLayout.CENTER);
 		panel.add(inputPanel, BorderLayout.NORTH);
-
+		
+		tableEstadoRegistro.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent evt) {
+				int row = tableEstadoRegistro.rowAtPoint(evt.getPoint());
+				if (row >= 0) {
+					textFieldCodigo.setText(tableEstadoRegistro.getModel().getValueAt(row, 0).toString());
+					textFieldNombre.setText(tableEstadoRegistro.getModel().getValueAt(row, 1).toString());
+					textFieldStock.setText(tableEstadoRegistro.getModel().getValueAt(row, 2).toString());
+					spinnerPreVenta.setValue(Double.parseDouble(tableEstadoRegistro.getModel().getValueAt(row, 3).toString()));
+					spinnerPreCompra.setValue(Double.parseDouble(tableEstadoRegistro.getModel().getValueAt(row, 4).toString()));
+					comboMarca.setSelectedItem(tableEstadoRegistro.getModel().getValueAt(row, 4));
+					comboCategoria.setSelectedItem(tableEstadoRegistro.getModel().getValueAt(row, 6).toString());
+					textFieldEstReg.setText(tableEstadoRegistro.getModel().getValueAt(row, 7).toString());
+				}
+			}
+		});
 		// Agregar el panel principal a la ventana
 		getContentPane().add(panel);
 
@@ -365,11 +378,7 @@ public class ClienteCRUDApp extends JFrame {
 
 		textFieldCodigo.setEditable(false);
 		textFieldNombre.setEditable(false);
-		textFieldApePat.setEditable(false);
-		textFieldApeMat.setEditable(false);
-		textFieldCorElc.setEditable(false);
-		textFieldDir.setEditable(false);
-		textFieldTel.setEditable(false);
+		textFieldStock.setEditable(false);
 		textFieldEstReg.setEditable(false);
 
 		// Cargar los datos de la tabla al iniciar la aplicaci�n
@@ -384,6 +393,7 @@ public class ClienteCRUDApp extends JFrame {
 		controllers[6] = buttonCancelar;
 		controllers[7] = buttonSalir;
 		cargarTabla();
+		llenarComboBox();
 	}
 
 	protected void evaluateOption(int option) {
@@ -394,7 +404,7 @@ public class ClienteCRUDApp extends JFrame {
 			case 0:
 				limpiarCampos();
 				statement = connection.prepareStatement(
-						"INSERT IGNORE INTO Cliente ( CliNom, CliApePat, CliApeMat, CliDir, CliTel, CliCorElc) VALUES (?, ?, ?, ?, ?, ?)");
+						"INSERT IGNORE INTO Producto ( PrdNom, PrdSto, PrdPreVen, PrdPreCom, MarCod, CatNum) VALUES (?, ?, ?, ?, ?, ?)");
 				protegerCampos(false);
 				textFieldCodigo.setText("0");
 				textFieldEstReg.setText("A");
@@ -410,7 +420,7 @@ public class ClienteCRUDApp extends JFrame {
 					throw new Exception("El registro primero tiene que estar en estado Activo");
 				}
 				statement = connection.prepareStatement(
-						"UPDATE Cliente SET CliNom = ?, CliApePat = ?, CliApeMat = ?, CliDir = ?, CliTel = ?, CliCorElc = ? WHERE CliCod = ?");
+						"UPDATE Producto SET PrdNom = ?, PrdSto = ?, PrdPreVen = ?, PrdPreCom = ?, MarCod = ?, CatNum = ? WHERE PrdCod = ?");
 				protegerCampos(false);
 				hasUpdate = true;
 				break;
@@ -419,8 +429,8 @@ public class ClienteCRUDApp extends JFrame {
 				if (codigo.length()<1) {
 					throw new Exception("No hay un registro seleccionado");
 				}
-				statement = connection.prepareStatement("UPDATE Cliente SET EstRegCod = 3 WHERE CliCod = ?");
-				textFieldEstReg.setText("*");
+				statement = connection.prepareStatement("UPDATE Producto SET EstRegCod = 3 WHERE PrdCod = ?");
+				textFieldEstReg.setText("ELIMINADO");
 				hasUpdate = true;
 				break;
 			case 3:
@@ -432,8 +442,8 @@ public class ClienteCRUDApp extends JFrame {
 				if (estReg.equals("2")) {
 					throw new Exception("El registro ya se encuentra Inactivo");
 				}
-				statement = connection.prepareStatement("UPDATE Cliente SET EstRegCod = 2 WHERE CliCod = ?");
-				textFieldEstReg.setText("I");
+				statement = connection.prepareStatement("UPDATE Producto SET EstRegCod = 2 WHERE PrdCod = ?");
+				textFieldEstReg.setText("INACTIVO");
 				hasUpdate = true;
 				break;
 			case 4:
@@ -445,43 +455,43 @@ public class ClienteCRUDApp extends JFrame {
 				if (estReg.equals("1")) {
 					throw new Exception("El registro ya se encuentra Activo");
 				}
-				statement = connection.prepareStatement("UPDATE Cliente SET EstRegCod = 1 WHERE CliCod = ?");
-				textFieldEstReg.setText("A");
+				statement = connection.prepareStatement("UPDATE Producto SET EstRegCod = 1 WHERE PrdCod = ?");
+				textFieldEstReg.setText("ACTIVO");
 
 				hasUpdate = true;
 				break;
 			case 5:
 				if (hasUpdate) {
-					int codMod = Integer.parseInt(textFieldCodigo.getText());
-					String nombre = textFieldNombre.getText();
-					String apePat = textFieldApePat.getText();
-					String apeMat = textFieldApeMat.getText();
-					String dir = textFieldDir.getText();
-					int tel = Integer.parseInt(textFieldTel.getText());
-					String corElc = textFieldCorElc.getText();
+					int PrdCod = Integer.parseInt(textFieldCodigo.getText());
+					String PrdNom = textFieldNombre.getText();
+					int PrdSto = Integer.parseInt(textFieldStock.getText());
+					double PrdPreVen = Double.parseDouble(spinnerPreVenta.getValue().toString());
+					double PrdPreCom = Double.parseDouble(spinnerPreCompra.getValue().toString());
+					int MarCod = ((Marca)comboMarca.getSelectedItem()).getMarCod();
+					int CatNum = ((Categoria)comboCategoria.getSelectedItem()).getCatNum();
 				
 					switch (lastOption) {
 					case 0:
-						statement.setString(1, nombre);
-						statement.setString(2, apePat);
-						statement.setString(3, apeMat);
-						statement.setString(4, dir);
-						statement.setInt(5, tel);
-						statement.setString(6, corElc);
+						statement.setString(1, PrdNom);
+						statement.setInt(2, PrdSto);
+						statement.setDouble(3, PrdPreVen);
+						statement.setDouble(4, PrdPreCom);
+						statement.setInt(5, MarCod);
+						statement.setInt(6, CatNum);
 						break;
 					case 1:
-						statement.setString(1, nombre);
-						statement.setString(2, apePat);
-						statement.setString(3, apeMat);
-						statement.setString(4, dir);
-						statement.setInt(5, tel);
-						statement.setString(6, corElc);
-						statement.setInt(7, codMod);
+						statement.setString(1, PrdNom);
+						statement.setInt(2, PrdSto);
+						statement.setDouble(3, PrdPreVen);
+						statement.setDouble(4, PrdPreCom);
+						statement.setInt(5, MarCod);
+						statement.setInt(6, CatNum);
+						statement.setInt(7, PrdCod);
 						break;
 					case 2:
 					case 3:
 					case 4:
-						statement.setInt(1, codMod);
+						statement.setInt(1, PrdCod);
 						break;
 					}
 
@@ -539,12 +549,13 @@ public class ClienteCRUDApp extends JFrame {
 	}
 
 	protected void protegerCampos(boolean isProtect) {
+		textFieldCodigo.setEditable(!isProtect);
 		textFieldNombre.setEditable(!isProtect);
-		textFieldApePat.setEditable(!isProtect);
-		textFieldApeMat.setEditable(!isProtect);
-		textFieldCorElc.setEditable(!isProtect);
-		textFieldDir.setEditable(!isProtect);
-		textFieldTel.setEditable(!isProtect);
+		textFieldStock.setEditable(!isProtect);
+		((DefaultEditor) spinnerPreVenta.getEditor()).getTextField().setEditable(!isProtect);
+		((DefaultEditor) spinnerPreCompra.getEditor()).getTextField().setEditable(!isProtect);
+		comboMarca.setEditable(!isProtect);
+		comboCategoria.setEditable(!isProtect);
 	}
 
 	private void cargarTabla() {
@@ -555,22 +566,22 @@ public class ClienteCRUDApp extends JFrame {
 			tableModel.setRowCount(0);
 
 			// Consultar los registros de la base de datos
-			String sql = "SELECT * FROM Cliente WHERE NOT EstRegCod='3';";
+			String sql = "SELECT * FROM Producto WHERE NOT EstRegCod='3';";
 			statement = connection.prepareStatement(sql);
 			ResultSet result = statement.executeQuery();
 
 			// Agregar los registros a la tabla
 			while (result.next()) {
-				String codigo = result.getString("CliCod");
-				String nombre = result.getString("CliNom");
-				String apePat = result.getString("CliApePat");
-				String apeMat = result.getString("CliApeMat");
-				String dir = result.getString("CliDir");
-				String tel = result.getString("CliTel");
-				String corElc = result.getString("CliCorElc");
-				String estReg = result.getString("EstRegCod");
-
-				Object[] row = { codigo, nombre, apePat, apeMat, dir, tel, corElc, estReg };
+				String PrdCod = result.getString("PrdCod");
+				String PrdNom = result.getString("PrdNom");
+				String PrdSto = result.getString("PrdSto");
+				String PrdPreVen = result.getString("PrdPreVen");
+				String PrdPreCom = result.getString("PrdPreCom");
+				String MarCod = result.getString("MarCod");
+				String CatNum = result.getString("CatNum");
+				String EstRegCod = result.getString("EstRegCod");
+				
+				Object[] row = {PrdCod, PrdNom, PrdSto, PrdPreVen, PrdPreCom, MarCod, CatNum, EstRegCod};
 				tableModel.addRow(row);
 			}
 
@@ -582,14 +593,56 @@ public class ClienteCRUDApp extends JFrame {
 		}
 	}
 
+	private void llenarComboBox() {
+		try {
+			// Consultar los registros de la base de datos
+			String sql = "SELECT MarCod,MarNom FROM Marca WHERE NOT EstRegCod='3';";
+			statement = connection.prepareStatement(sql);
+			ResultSet result = statement.executeQuery();
+			
+			
+			MutableComboBoxModel<Marca> model = (MutableComboBoxModel<Marca>)comboMarca.getModel();
+			// Agregar los registros a la tabla
+			marcas = new ArrayList<Marca>();
+			while (result.next()) {
+				marcas.add(new Marca(Integer.parseInt(result.getString("MarCod")),result.getString("MarNom")));
+				model.addElement( marcas.get(marcas.size()-1));
+			}
+			comboMarca = new JComboBox<Marca>(model);
+			
+			// Cerrar el resultado y la declaración
+			result.close();
+			statement.close();
+			// Consultar los registros de la base de datos
+			sql = "SELECT CatNum,CatNom FROM Categoria WHERE NOT EstRegCod='3';";
+			statement = connection.prepareStatement(sql);
+			result = statement.executeQuery();
+			
+			
+			MutableComboBoxModel<Categoria> model2 = (MutableComboBoxModel<Categoria>)comboCategoria.getModel();
+			
+			// Agregar los registros a la tabla
+			categorias = new ArrayList<Categoria>();
+			while (result.next()) {
+				categorias.add(new Categoria(Integer.parseInt(result.getString("CatNum")),result.getString("CatNom")));
+				model2.addElement(categorias.get(categorias.size()-1));
+			}
+			comboCategoria = new JComboBox<Categoria>(model2);
+			// Cerrar el resultado y la declaración
+			
+			result.close();
+			statement.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
 	private void limpiarCampos() {
 		textFieldCodigo.setText("");
 		textFieldNombre.setText("");
-		textFieldApePat.setText("");
-		textFieldApeMat.setText("");
-		textFieldDir.setText("");
-		textFieldTel.setText("");
-		textFieldCorElc.setText("");
+		textFieldStock.setText("");
 		textFieldEstReg.setText("");
 	}
 }
